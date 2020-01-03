@@ -1,0 +1,66 @@
+---
+title: "FPCA with longitudinal projections"
+author: "Andreas Kryger Jensen"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+geometry: margin=2cm
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+#Simulate data
+```{r}
+rm(list=ls())
+library(mvtnorm)
+library(fdapace)
+
+source("util.R")
+
+N <- 200
+D <- 50
+K <- 2
+tSeq <- seq(0, 1, length.out=D)
+
+set.seed(123456)
+d <- simData_long(N, tSeq, 0.5)
+```
+
+```{r, fig.width=9, fig.height=6}
+par(mfrow=c(1,2), bty="n")
+
+matplot(tSeq, t(d$true), type="l", lty=1)
+matplot(tSeq, t(d$obs), type="l", lty=1)
+```
+
+```{r, fig.width=9, fig.height=7}
+par(mfrow=c(2,2), bty="n")
+
+plot(tSeq, psi1(tSeq), type="l", lty=1)
+plot(tSeq, psi2(tSeq), type="l", lty=1)
+plot(1:N, d$zeta1, type="l", lty=1)
+plot(1:N, d$zeta2, type="l", lty=1)
+```
+
+#Ordinary FPCA
+```{r, fig.width=9, fig.height=7}
+m_fpca <- FPCA(lapply(1:N, function(i) d$obs[i,]),
+               lapply(1:N, function(i) tSeq))
+
+plot(m_fpca)
+```
+
+```{r, fig.width=9, fig.height=7}
+par(mfrow=c(2,2), bty="n")
+
+plot(tSeq, -m_fpca$phi[,1], col="gray")
+lines(tSeq, psi1(tSeq))
+
+plot(tSeq, -m_fpca$phi[,2], col="gray")
+lines(tSeq, psi2(tSeq))
+
+plot(1:N, -m_fpca$xiEst[,1], col="gray")
+lines(1:N, d$zeta1)
+
+plot(1:N, -m_fpca$xiEst[,2], col="gray")
+lines(1:N, d$zeta2)
+```
